@@ -84,6 +84,7 @@ func TestValidGoosGoarchCombos(t *testing.T) {
 		{"solaris", "amd64"},
 		{"windows", "386"},
 		{"windows", "amd64"},
+		{"linux", "ppc64le"},
 	}
 	for _, p := range platforms {
 		t.Run(fmt.Sprintf("%v %v is valid", p.os, p.arch), func(t *testing.T) {
@@ -101,7 +102,6 @@ func TestInvalidGoosGoarchCombos(t *testing.T) {
 		{"windows", "arm"},
 		{"windows", "arm64"},
 		{"linux", "ppc64"},
-		{"linux", "ppc64le"},
 		{"openbsd", "arm"},
 	}
 	for _, p := range platforms {
