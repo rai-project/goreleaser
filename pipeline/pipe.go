@@ -1,7 +1,7 @@
 // Package pipeline provides a generic pipe interface.
 package pipeline
 
-import "github.com/goreleaser/goreleaser/context"
+import "github.com/rai-project/goreleaser/context"
 
 // Pipe interface
 type Pipe interface {

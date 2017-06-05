@@ -5,7 +5,7 @@ package defaults
 import (
 	"fmt"
 
-	"github.com/goreleaser/goreleaser/context"
+	"github.com/rai-project/goreleaser/context"
 )
 
 // NameTemplate default name_template for the archive.

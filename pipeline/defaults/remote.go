@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/goreleaser/goreleaser/config"
+	"github.com/rai-project/goreleaser/config"
 )
 
 // remoteRepo gets the repo name from the Git config.

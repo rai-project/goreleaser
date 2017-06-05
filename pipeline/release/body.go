@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"os/exec"
 
-	"github.com/goreleaser/goreleaser/context"
+	"github.com/rai-project/goreleaser/context"
 )
 
 const bodyTemplate = `{{ .ReleaseNotes }}

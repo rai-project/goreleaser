@@ -3,12 +3,12 @@
   <h3 align="center">GoReleaser</h3>
   <p align="center">Deliver Go binaries as fast and easily as possible.</p>
   <p align="center">
-    <a href="https://github.com/goreleaser/goreleaser/releases/latest"><img alt="Release" src="https://img.shields.io/github/release/goreleaser/goreleaser.svg?style=flat-square"></a>
+    <a href="https://github.com/rai-project/goreleaser/releases/latest"><img alt="Release" src="https://img.shields.io/github/release/goreleaser/goreleaser.svg?style=flat-square"></a>
     <a href="/LICENSE.md"><img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square"></a>
     <a href="https://travis-ci.org/goreleaser/goreleaser"><img alt="Travis" src="https://img.shields.io/travis/goreleaser/goreleaser.svg?style=flat-square"></a>
     <a href="https://codecov.io/gh/goreleaser/goreleaser"><img alt="Codecov branch" src="https://img.shields.io/codecov/c/github/goreleaser/goreleaser/master.svg?style=flat-square"></a>
-    <a href="https://goreportcard.com/report/github.com/goreleaser/goreleaser"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/goreleaser/goreleaser?style=flat-square"></a>
-    <a href="http://godoc.org/github.com/goreleaser/goreleaser"><img alt="Go Doc" src="https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square"></a>
+    <a href="https://goreportcard.com/report/github.com/rai-project/goreleaser"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/rai-project/goreleaser?style=flat-square"></a>
+    <a href="http://godoc.org/github.com/rai-project/goreleaser"><img alt="Go Doc" src="https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square"></a>
     <a href="https://beerpay.io/goreleaser/goreleaser"><img src="https://beerpay.io/goreleaser/goreleaser/badge.svg?style=flat-square" /></a>
     <a href="https://saythanks.io/to/caarlos0"><img alt="SayThanks.io" src="https://img.shields.io/badge/SayThanks.io-%E2%98%BC-1EAEDB.svg?style=flat-square"></a>
     <a href="https://github.com/goreleaser"><img alt="Powered By: GoReleaser" src="https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=flat-square"></a>
@@ -139,7 +139,7 @@ That's it! Check your GitHub project's release page.
 The release should look like this:
 
 [![image](https://cloud.githubusercontent.com/assets/245435/23342061/fbcbd506-fc31-11e6-9d2b-4c1b776dee9c.png)
-](https://github.com/goreleaser/goreleaser/releases)
+](https://github.com/rai-project/goreleaser/releases)
 
 ## Environment setup
 
@@ -474,4 +474,4 @@ deployment:
 
 ---
 
-Would you like to fix something in the documentation? Feel free to open an [issue](https://github.com/goreleaser/goreleaser/issues).
+Would you like to fix something in the documentation? Feel free to open an [issue](https://github.com/rai-project/goreleaser/issues).

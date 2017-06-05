@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/goreleaser/goreleaser/checksum"
-	"github.com/goreleaser/goreleaser/context"
+	"github.com/rai-project/goreleaser/checksum"
+	"github.com/rai-project/goreleaser/context"
 	"golang.org/x/sync/errgroup"
 )
 

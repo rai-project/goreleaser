@@ -10,10 +10,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/goreleaser/goreleaser/checksum"
-	"github.com/goreleaser/goreleaser/config"
-	"github.com/goreleaser/goreleaser/context"
-	"github.com/goreleaser/goreleaser/internal/client"
+	"github.com/rai-project/goreleaser/checksum"
+	"github.com/rai-project/goreleaser/config"
+	"github.com/rai-project/goreleaser/context"
+	"github.com/rai-project/goreleaser/internal/client"
 )
 
 // ErrNoDarwin64Build when there is no build for darwin_amd64 (goos doesn't

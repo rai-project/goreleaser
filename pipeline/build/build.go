@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/goreleaser/goreleaser/context"
-	"github.com/goreleaser/goreleaser/internal/ext"
+	"github.com/rai-project/goreleaser/context"
+	"github.com/rai-project/goreleaser/internal/ext"
 	"golang.org/x/sync/errgroup"
 )
 

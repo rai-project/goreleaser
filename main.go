@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/goreleaser/goreleaser/goreleaserlib"
+	"github.com/rai-project/goreleaser/goreleaserlib"
 	"github.com/urfave/cli"
 )
 

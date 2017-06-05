@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/goreleaser/goreleaser/config"
-	"github.com/goreleaser/goreleaser/context"
+	"github.com/rai-project/goreleaser/config"
+	"github.com/rai-project/goreleaser/context"
 	"github.com/stretchr/testify/assert"
 )
 

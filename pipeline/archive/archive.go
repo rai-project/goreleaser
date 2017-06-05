@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/goreleaser/goreleaser/context"
-	"github.com/goreleaser/goreleaser/internal/ext"
-	"github.com/goreleaser/goreleaser/internal/tar"
-	"github.com/goreleaser/goreleaser/internal/zip"
+	"github.com/rai-project/goreleaser/context"
+	"github.com/rai-project/goreleaser/internal/ext"
+	"github.com/rai-project/goreleaser/internal/tar"
+	"github.com/rai-project/goreleaser/internal/zip"
 	"github.com/mattn/go-zglob"
 	"golang.org/x/sync/errgroup"
 )

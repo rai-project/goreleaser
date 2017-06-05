@@ -9,18 +9,18 @@ import (
 
 	"fmt"
 
-	"github.com/goreleaser/goreleaser/config"
-	"github.com/goreleaser/goreleaser/context"
-	"github.com/goreleaser/goreleaser/pipeline"
-	"github.com/goreleaser/goreleaser/pipeline/archive"
-	"github.com/goreleaser/goreleaser/pipeline/brew"
-	"github.com/goreleaser/goreleaser/pipeline/build"
-	"github.com/goreleaser/goreleaser/pipeline/checksums"
-	"github.com/goreleaser/goreleaser/pipeline/defaults"
-	"github.com/goreleaser/goreleaser/pipeline/env"
-	"github.com/goreleaser/goreleaser/pipeline/fpm"
-	"github.com/goreleaser/goreleaser/pipeline/git"
-	"github.com/goreleaser/goreleaser/pipeline/release"
+	"github.com/rai-project/goreleaser/config"
+	"github.com/rai-project/goreleaser/context"
+	"github.com/rai-project/goreleaser/pipeline"
+	"github.com/rai-project/goreleaser/pipeline/archive"
+	"github.com/rai-project/goreleaser/pipeline/brew"
+	"github.com/rai-project/goreleaser/pipeline/build"
+	"github.com/rai-project/goreleaser/pipeline/checksums"
+	"github.com/rai-project/goreleaser/pipeline/defaults"
+	"github.com/rai-project/goreleaser/pipeline/env"
+	"github.com/rai-project/goreleaser/pipeline/fpm"
+	"github.com/rai-project/goreleaser/pipeline/git"
+	"github.com/rai-project/goreleaser/pipeline/release"
 )
 
 var pipes = []pipeline.Pipe{
