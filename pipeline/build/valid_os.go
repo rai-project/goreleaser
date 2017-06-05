@@ -15,8 +15,8 @@ var valids = []string{
 	"linuxamd64",
 	"linuxarm",
 	"linuxarm64",
-	// "linuxppc64", - https://github.com/golang/go/issues/10087
-	// "linuxppc64le", - https://github.com/golang/go/issues/10087
+	"linuxppc64", 
+	"linuxppc64le", 
 	"linuxmips",
 	"linuxmipsle",
 	"linuxmips64",
