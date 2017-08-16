@@ -2,16 +2,15 @@ package goreleaserlib
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strconv"
 	"testing"
 
-	yaml "gopkg.in/yaml.v1"
-
 	"github.com/rai-project/goreleaser/config"
+	"github.com/rai-project/goreleaser/internal/testlib"
 	"github.com/stretchr/testify/assert"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func init() {
@@ -26,6 +25,8 @@ func TestRelease(t *testing.T) {
 		flags: map[string]string{
 			"skip-publish":  "true",
 			"skip-validate": "true",
+			"debug":         "true",
+			"parallelism":   "4",
 		},
 	}
 	assert.NoError(Release(flags))
@@ -37,7 +38,8 @@ func TestSnapshotRelease(t *testing.T) {
 	defer back()
 	var flags = fakeFlags{
 		flags: map[string]string{
-			"snapshot": "true",
+			"snapshot":    "true",
+			"parallelism": "4",
 		},
 	}
 	assert.NoError(Release(flags))
@@ -51,6 +53,22 @@ func TestConfigFileIsSetAndDontExist(t *testing.T) {
 		},
 	}
 	assert.Error(Release(flags))
+}
+
+func TestConfigFlagNotSetButExists(t *testing.T) {
+	var assert = assert.New(t)
+	folder, back := setup(t)
+	defer back()
+	assert.NoError(
+		os.Rename(
+			filepath.Join(folder, "goreleaser.yml"),
+			filepath.Join(folder, ".goreleaser.yml"),
+		),
+	)
+	var flags = fakeFlags{
+		flags: map[string]string{},
+	}
+	assert.Equal(".goreleaser.yml", getConfigFile(flags))
 }
 
 func TestReleaseNotesFileDontExist(t *testing.T) {
@@ -74,6 +92,7 @@ func TestCustomReleaseNotesFile(t *testing.T) {
 			"release-notes": releaseNotes,
 			"skip-publish":  "true",
 			"skip-validate": "true",
+			"parallelism":   "4",
 		},
 	}
 	assert.NoError(Release(flags))
@@ -88,6 +107,7 @@ func TestBrokenPipe(t *testing.T) {
 		flags: map[string]string{
 			"skip-publish":  "true",
 			"skip-validate": "true",
+			"parallelism":   "4",
 		},
 	}
 	assert.Error(Release(flags))
@@ -135,9 +155,16 @@ type fakeFlags struct {
 func (f fakeFlags) IsSet(s string) bool {
 	return f.flags[s] != ""
 }
+
 func (f fakeFlags) String(s string) string {
 	return f.flags[s]
 }
+
+func (f fakeFlags) Int(s string) int {
+	i, _ := strconv.ParseInt(f.flags[s], 10, 32)
+	return int(i)
+}
+
 func (f fakeFlags) Bool(s string) bool {
 	return f.flags[s] == "true"
 }
@@ -146,33 +173,20 @@ func setup(t *testing.T) (current string, back func()) {
 	var assert = assert.New(t)
 	folder, err := ioutil.TempDir("", "goreleaser")
 	assert.NoError(err)
-	log.Println("Folder:", folder)
 	previous, err := os.Getwd()
 	assert.NoError(err)
 	assert.NoError(os.Chdir(folder))
-	var gitCmds = [][]string{
-		{"init"},
-		{"add", "-A"},
-		{"commit", "--allow-empty", "-m", "asdf"},
-		{"tag", "v0.0.1"},
-		{"commit", "--allow-empty", "-m", "asas89d"},
-		{"commit", "--allow-empty", "-m", "assssf"},
-		{"commit", "--allow-empty", "-m", "assd"},
-		{"tag", "v0.0.2"},
-		{"remote", "add", "origin", "git@github.com:goreleaser/fake.git"},
-	}
 	createGoreleaserYaml(t)
 	createMainGo(t)
-	for _, cmd := range gitCmds {
-		var args = []string{
-			"-c",
-			"user.name='GoReleaser'",
-			"-c",
-			"user.email='test@goreleaser.github.com'",
-		}
-		args = append(args, cmd...)
-		assert.NoError(exec.Command("git", args...).Run())
-	}
+	testlib.GitInit(t)
+	testlib.GitAdd(t)
+	testlib.GitCommit(t, "asdf")
+	testlib.GitTag(t, "v0.0.1")
+	testlib.GitCommit(t, "asas89d")
+	testlib.GitCommit(t, "assssf")
+	testlib.GitCommit(t, "assd")
+	testlib.GitTag(t, "v0.0.2")
+	testlib.GitRemoteAdd(t, "git@github.com:goreleaser/fake.git")
 	return folder, func() {
 		assert.NoError(os.Chdir(previous))
 	}

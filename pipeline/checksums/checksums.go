@@ -4,10 +4,10 @@ package checksums
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/apex/log"
 	"github.com/rai-project/goreleaser/checksum"
 	"github.com/rai-project/goreleaser/context"
 	"golang.org/x/sync/errgroup"
@@ -26,7 +26,7 @@ func (Pipe) Run(ctx *context.Context) (err error) {
 	file, err := os.OpenFile(
 		filepath.Join(
 			ctx.Config.Dist,
-			fmt.Sprintf("%v_checksums.txt", ctx.Config.Build.Binary),
+			fmt.Sprintf("%v_checksums.txt", ctx.Config.ProjectName),
 		),
 		os.O_APPEND|os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
 		0644,
@@ -49,7 +49,7 @@ func (Pipe) Run(ctx *context.Context) (err error) {
 }
 
 func checksums(ctx *context.Context, file *os.File, name string) error {
-	log.Println("Checksumming", name)
+	log.WithField("file", name).Info("checksumming")
 	var artifact = filepath.Join(ctx.Config.Dist, name)
 	sha, err := checksum.SHA256(artifact)
 	if err != nil {

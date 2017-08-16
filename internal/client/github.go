@@ -2,9 +2,9 @@ package client
 
 import (
 	"bytes"
-	"log"
 	"os"
 
+	"github.com/apex/log"
 	"github.com/google/go-github/github"
 	"github.com/rai-project/goreleaser/context"
 	"golang.org/x/oauth2"
@@ -32,11 +32,11 @@ func (c *githubClient) CreateFile(
 	options := &github.RepositoryContentFileOptions{
 		Committer: &github.CommitAuthor{
 			Name:  github.String("goreleaserbot"),
-			Email: github.String("bot@goreleaser"),
+			Email: github.String("goreleaser@carlosbecker.com"),
 		},
 		Content: content.Bytes(),
 		Message: github.String(
-			ctx.Config.Build.Binary + " version " + ctx.Git.CurrentTag,
+			ctx.Config.ProjectName + " version " + ctx.Git.CurrentTag,
 		),
 	}
 
@@ -98,7 +98,7 @@ func (c *githubClient) CreateRelease(ctx *context.Context, body string) (release
 			data,
 		)
 	}
-	log.Printf("Release updated: %v\n", release.GetHTMLURL())
+	log.WithField("url", release.GetHTMLURL()).Info("release updated")
 	return release.GetID(), err
 }
 

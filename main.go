@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
+	"github.com/apex/log"
+	lcli "github.com/apex/log/handlers/cli"
 	"github.com/rai-project/goreleaser/goreleaserlib"
 	"github.com/urfave/cli"
 )
@@ -15,6 +16,10 @@ var (
 	date    = "unknown"
 )
 
+func init() {
+	log.SetHandler(lcli.New(os.Stdout))
+}
+
 func main() {
 	var app = cli.NewApp()
 	app.Name = "goreleaser"
@@ -24,7 +29,7 @@ func main() {
 		cli.StringFlag{
 			Name:  "config, file, c, f",
 			Usage: "Load configuration from `FILE`",
-			Value: "goreleaser.yml",
+			Value: ".goreleaser.yml",
 		},
 		cli.StringFlag{
 			Name:  "release-notes",
@@ -42,11 +47,25 @@ func main() {
 			Name:  "snapshot",
 			Usage: "Generate an unversioned snapshot release",
 		},
+		cli.BoolFlag{
+			Name:  "rm-dist",
+			Usage: "Remove ./dist before building",
+		},
+		cli.IntFlag{
+			Name:  "parallelism, p",
+			Usage: "Amount of builds launch in parallel",
+			Value: 4,
+		},
+		cli.BoolFlag{
+			Name:  "debug",
+			Usage: "Enable debug mode",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
-		log.Printf("Running goreleaser %v\n", version)
+		log.Infof("running goreleaser %v", version)
 		if err := goreleaserlib.Release(c); err != nil {
-			return cli.NewExitError(err.Error(), 1)
+			log.WithError(err).Error("release failed")
+			return cli.NewExitError("\n", 1)
 		}
 		return nil
 	}
@@ -54,19 +73,21 @@ func main() {
 		{
 			Name:    "init",
 			Aliases: []string{"i"},
-			Usage:   "generate goreleaser.yml",
+			Usage:   "generate .goreleaser.yml",
 			Action: func(c *cli.Context) error {
-				var filename = "goreleaser.yml"
+				var filename = ".goreleaser.yml"
 				if err := goreleaserlib.InitProject(filename); err != nil {
-					return cli.NewExitError(err.Error(), 1)
+					log.WithError(err).Error("failed to init project")
+					return cli.NewExitError("\n", 1)
 				}
 
-				log.Printf("%s created. Please edit accordingly to your needs.", filename)
+				log.WithField("file", filename).
+					Info("config created; please edit accordingly to your needs")
 				return nil
 			},
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
-		log.Fatalln(err)
+		log.WithError(err).Fatal("failed")
 	}
 }

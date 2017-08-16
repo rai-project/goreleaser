@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/apex/log"
+  packages = [".","handlers/cli"]
+  revision = "8f3a15d95392c8fc202d1e1059f46df21dff2992"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -11,13 +17,13 @@
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "5a0f697c9ed9d68fef0116532c6e05cfeae00e55"
+  revision = "6a1fa9404c0aebf36c879bc50152edcc953910d2"
 
 [[projects]]
   branch = "master"
   name = "github.com/google/go-github"
   packages = ["github"]
-  revision = "ebfec748347a9af6793c723f8859afcd906860fb"
+  revision = "fe7d11f8add400587b6718d9f39a62e42cb04c28"
 
 [[projects]]
   branch = "master"
@@ -26,10 +32,22 @@
   revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
 
 [[projects]]
+  name = "github.com/goreleaser/archive"
+  packages = [".","tar","zip"]
+  revision = "caa5f3f5742eb0535631e94fa5e171c74c0144b7"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/mattn/go-zglob"
   packages = [".","fastwalk"]
   revision = "95345c4e1c0ebc9d16a3284177f09360f4d20fab"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -52,20 +70,20 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context"]
-  revision = "3da985ce5951d99de868be4385f21ea6c2b22f24"
+  packages = ["context","context/ctxhttp"]
+  revision = "054b33e6527139ad5b1ec2f6232c3b175bd9a30c"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","internal"]
-  revision = "f047394b6d14284165300fd82dad67edb3a4d7f6"
+  revision = "cce311a261e6fcf29de72ca96827bdb0b7d9c9e6"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
-  revision = "57af736625aaa69dfa099432bb67e0808eef3bcc"
+  revision = "f52d1811a62927559de87708c8913c1650ce4f26"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -74,14 +92,14 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "v1"
-  name = "gopkg.in/yaml.v1"
+  branch = "v2"
+  name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "9f9df34309c04878acc86042b16630b0f696e1de"
+  revision = "cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "612a8c73aafb0d235fb9758a889e7a2fee0e0155d4c70cec64d544b62f329cdd"
+  inputs-digest = "5aac2f70507156662f63f0938ce9730bed3895cc5c519ac97307b9c8004088fe"
   solver-name = "gps-cdcl"
   solver-version = 1

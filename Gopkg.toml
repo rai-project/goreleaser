@@ -64,7 +64,9 @@
 ## what source location any dependent projects specify.
 # source = "https://github.com/myfork/package.git"
 
-
+[[constraint]]
+  name = "github.com/goreleaser/archive"
+  version = "1.0.0"
 
 [[constraint]]
   branch = "master"
@@ -95,5 +97,10 @@
   name = "golang.org/x/sync"
 
 [[constraint]]
-  branch = "v1"
-  name = "gopkg.in/yaml.v1"
+  branch = "v2"
+  name = "gopkg.in/yaml.v2"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/apex/log"
+

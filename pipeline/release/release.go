@@ -3,10 +3,10 @@
 package release
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/apex/log"
 	"github.com/rai-project/goreleaser/context"
 	"github.com/rai-project/goreleaser/internal/client"
 	"golang.org/x/sync/errgroup"
@@ -27,10 +27,12 @@ func (Pipe) Run(ctx *context.Context) error {
 
 func doRun(ctx *context.Context, client client.Client) error {
 	if !ctx.Publish {
-		log.Println("Skipped because --skip-publish is set")
+		log.Warn("skipped because --skip-publish is set")
 		return nil
 	}
-	log.Println("Creating or updating release", ctx.Git.CurrentTag, "on", ctx.Config.Release.GitHub.String())
+	log.WithField("tag", ctx.Git.CurrentTag).
+		WithField("repo", ctx.Config.Release.GitHub.String()).
+		Info("creating or updating release")
 	body, err := describeBody(ctx)
 	if err != nil {
 		return err
@@ -40,9 +42,14 @@ func doRun(ctx *context.Context, client client.Client) error {
 		return err
 	}
 	var g errgroup.Group
+	sem := make(chan bool, ctx.Parallelism)
 	for _, artifact := range ctx.Artifacts {
+		sem <- true
 		artifact := artifact
 		g.Go(func() error {
+			defer func() {
+				<-sem
+			}()
 			return upload(ctx, client, releaseID, artifact)
 		})
 	}
@@ -56,6 +63,7 @@ func upload(ctx *context.Context, client client.Client, releaseID int, artifact 
 		return err
 	}
 	defer func() { _ = file.Close() }()
-	log.Println("Uploading", file.Name())
-	return client.Upload(ctx, releaseID, artifact, file)
+	_, name := filepath.Split(path)
+	log.WithField("file", file.Name()).WithField("name", name).Info("uploading to release")
+	return client.Upload(ctx, releaseID, name, file)
 }

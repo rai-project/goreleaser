@@ -2,8 +2,8 @@ package release
 
 import (
 	"bytes"
-	"html/template"
 	"os/exec"
+	"text/template"
 
 	"github.com/rai-project/goreleaser/context"
 )
@@ -11,7 +11,7 @@ import (
 const bodyTemplate = `{{ .ReleaseNotes }}
 
 ---
-Automated with @goreleaser
+Automated with [GoReleaser](https://github.com/goreleaser)
 Built with {{ .GoVersion }}
 `
 

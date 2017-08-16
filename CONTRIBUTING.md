@@ -12,13 +12,14 @@ Prerequisites are:
 * Build:
   * `make`
   * [Go 1.8+](http://golang.org/doc/install)
+  * [fpm](https://fpm.readthedocs.io/en/latest/installing.html)
 
 Clone `goreleaser` from source into `$GOPATH`:
 
 ```sh
-$ pkdir -p $GOPATH/src/github.com/github.com/goreleaser
+$ mkdir -p $GOPATH/src/github.com/github.com/goreleaser
 $ cd $_
-$ git clone git@github.com:goreleaser/goreleaser.git
+$ git clone git@github.com:rai-project/goreleaser.git
 $ cd goreleaser
 ```
 

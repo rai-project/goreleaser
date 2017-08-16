@@ -1,14 +1,12 @@
 package goreleaserlib
 
 import (
-	"io/ioutil"
-	"log"
-	"os"
-
-	yaml "gopkg.in/yaml.v1"
-
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
 
+	"github.com/apex/log"
 	"github.com/rai-project/goreleaser/config"
 	"github.com/rai-project/goreleaser/context"
 	"github.com/rai-project/goreleaser/pipeline"
@@ -16,40 +14,45 @@ import (
 	"github.com/rai-project/goreleaser/pipeline/brew"
 	"github.com/rai-project/goreleaser/pipeline/build"
 	"github.com/rai-project/goreleaser/pipeline/checksums"
+	"github.com/rai-project/goreleaser/pipeline/cleandist"
 	"github.com/rai-project/goreleaser/pipeline/defaults"
 	"github.com/rai-project/goreleaser/pipeline/env"
 	"github.com/rai-project/goreleaser/pipeline/fpm"
 	"github.com/rai-project/goreleaser/pipeline/git"
 	"github.com/rai-project/goreleaser/pipeline/release"
+	"github.com/rai-project/goreleaser/pipeline/snapcraft"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var pipes = []pipeline.Pipe{
 	defaults.Pipe{},  // load default configs
 	git.Pipe{},       // get and validate git repo state
 	env.Pipe{},       // load and validate environment variables
+	cleandist.Pipe{}, // ensure ./dist is clean
 	build.Pipe{},     // build
 	archive.Pipe{},   // archive (tar.gz, zip, etc)
 	fpm.Pipe{},       // archive via fpm (deb, rpm, etc)
+	snapcraft.Pipe{}, // archive via snapcraft (snap)
 	checksums.Pipe{}, // checksums of the files
 	release.Pipe{},   // release to github
 	brew.Pipe{},      // push to brew tap
-}
-
-func init() {
-	log.SetFlags(0)
 }
 
 // Flags interface represents an extractor of cli flags
 type Flags interface {
 	IsSet(s string) bool
 	String(s string) string
+	Int(s string) int
 	Bool(s string) bool
 }
 
 // Release runs the release process with the given flags
 func Release(flags Flags) error {
-	var file = flags.String("config")
+	var file = getConfigFile(flags)
 	var notes = flags.String("release-notes")
+	if flags.Bool("debug") {
+		log.SetLevel(log.DebugLevel)
+	}
 	cfg, err := config.Load(file)
 	if err != nil {
 		// Allow file not found errors if config file was not
@@ -58,9 +61,11 @@ func Release(flags Flags) error {
 		if !os.IsNotExist(statErr) || flags.IsSet("config") {
 			return err
 		}
-		log.Printf("WARNING: Could not load %v\n", file)
+		log.WithField("file", file).Warn("could not load config, using defaults")
 	}
 	var ctx = context.New(cfg)
+	ctx.Parallelism = flags.Int("parallelism")
+	log.Debugf("parallelism: %v", ctx.Parallelism)
 	ctx.Validate = !flags.Bool("skip-validate")
 	ctx.Publish = !flags.Bool("skip-publish")
 	if notes != "" {
@@ -68,23 +73,22 @@ func Release(flags Flags) error {
 		if err != nil {
 			return err
 		}
-		log.Println("Loaded custom release notes from", notes)
+		log.WithField("notes", notes).Info("loaded custom release notes")
 		ctx.ReleaseNotes = string(bts)
 	}
 	ctx.Snapshot = flags.Bool("snapshot")
 	if ctx.Snapshot {
-		log.Println("Publishing disabled in snapshot mode")
+		log.Info("publishing disabled in snapshot mode")
 		ctx.Publish = false
 	}
+	ctx.RmDist = flags.Bool("rm-dist")
 	for _, pipe := range pipes {
-		log.Println(pipe.Description())
-		log.SetPrefix(" -> ")
+		log.Infof("\033[1m%s\033[0m", strings.ToUpper(pipe.Description()))
 		if err := pipe.Run(ctx); err != nil {
 			return err
 		}
-		log.SetPrefix("")
 	}
-	log.Println("Done!")
+	log.Infof("\033[1mSUCCESS!\033[0m")
 	return nil
 }
 
@@ -108,4 +112,18 @@ func InitProject(filename string) error {
 	}
 
 	return ioutil.WriteFile(filename, out, 0644)
+}
+
+func getConfigFile(flags Flags) string {
+	var config = flags.String("config")
+	if flags.IsSet("config") {
+		return config
+	}
+	for _, f := range []string{".goreleaser.yml", "goreleaser.yml"} {
+		_, ferr := os.Stat(f)
+		if ferr == nil || os.IsExist(ferr) {
+			return f
+		}
+	}
+	return config
 }

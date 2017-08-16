@@ -1,13 +1,13 @@
 package archive
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/rai-project/goreleaser/config"
 	"github.com/rai-project/goreleaser/context"
+	"github.com/rai-project/goreleaser/internal/testlib"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,33 +17,21 @@ func TestDescription(t *testing.T) {
 
 func TestRunPipe(t *testing.T) {
 	var assert = assert.New(t)
-	folder, err := ioutil.TempDir("", "archivetest")
-	assert.NoError(err)
-	current, err := os.Getwd()
-	assert.NoError(err)
-	assert.NoError(os.Chdir(folder))
-	defer func() {
-		assert.NoError(os.Chdir(current))
-	}()
+	folder, back := testlib.Mktmp(t)
+	defer back()
 	var dist = filepath.Join(folder, "dist")
 	assert.NoError(os.Mkdir(dist, 0755))
-	assert.NoError(os.Mkdir(filepath.Join(dist, "mybin"), 0755))
-	_, err = os.Create(filepath.Join(dist, "mybin", "mybin"))
+	assert.NoError(os.Mkdir(filepath.Join(dist, "mybin_darwin_amd64"), 0755))
+	assert.NoError(os.Mkdir(filepath.Join(dist, "mybin_windows_amd64"), 0755))
+	_, err := os.Create(filepath.Join(dist, "mybin_darwin_amd64", "mybin"))
 	assert.NoError(err)
-	_, err = os.Create(filepath.Join(dist, "mybin", "mybin.exe"))
+	_, err = os.Create(filepath.Join(dist, "mybin_windows_amd64", "mybin.exe"))
 	assert.NoError(err)
 	_, err = os.Create(filepath.Join(folder, "README.md"))
 	assert.NoError(err)
 	var ctx = &context.Context{
-		Archives: map[string]string{
-			"darwinamd64":  "mybin",
-			"windowsamd64": "mybin",
-		},
 		Config: config.Project{
 			Dist: dist,
-			Build: config.Build{
-				Binary: "mybin",
-			},
 			Archive: config.Archive{
 				Files: []string{
 					"README.*",
@@ -57,6 +45,8 @@ func TestRunPipe(t *testing.T) {
 			},
 		},
 	}
+	ctx.AddBinary("darwinamd64", "mybin_darwin_amd64", "mybin", filepath.Join(dist, "mybin_darwin_amd64", "mybin"))
+	ctx.AddBinary("windowsamd64", "mybin_windows_amd64", "mybin.exe", filepath.Join(dist, "mybin_windows_amd64", "mybin.exe"))
 	for _, format := range []string{"tar.gz", "zip"} {
 		t.Run("Archive format "+format, func(t *testing.T) {
 			ctx.Config.Archive.Format = format
@@ -65,13 +55,42 @@ func TestRunPipe(t *testing.T) {
 	}
 }
 
+func TestRunPipeBinary(t *testing.T) {
+	var assert = assert.New(t)
+	folder, back := testlib.Mktmp(t)
+	defer back()
+	var dist = filepath.Join(folder, "dist")
+	assert.NoError(os.Mkdir(dist, 0755))
+	assert.NoError(os.Mkdir(filepath.Join(dist, "mybin_darwin"), 0755))
+	assert.NoError(os.Mkdir(filepath.Join(dist, "mybin_win"), 0755))
+	_, err := os.Create(filepath.Join(dist, "mybin_darwin", "mybin"))
+	assert.NoError(err)
+	_, err = os.Create(filepath.Join(dist, "mybin_win", "mybin.exe"))
+	assert.NoError(err)
+	_, err = os.Create(filepath.Join(folder, "README.md"))
+	assert.NoError(err)
+	var ctx = &context.Context{
+		Config: config.Project{
+			Dist: dist,
+			Builds: []config.Build{
+				{Binary: "mybin"},
+			},
+			Archive: config.Archive{
+				Format: "binary",
+			},
+		},
+	}
+	ctx.AddBinary("darwinamd64", "mybin_darwin", "mybin", filepath.Join(dist, "mybin_darwin", "mybin"))
+	ctx.AddBinary("windowsamd64", "mybin_win", "mybin.exe", filepath.Join(dist, "mybin_win", "mybin.exe"))
+	assert.NoError(Pipe{}.Run(ctx))
+	assert.Contains(ctx.Artifacts, "mybin_darwin/mybin")
+	assert.Contains(ctx.Artifacts, "mybin_win/mybin.exe")
+	assert.Len(ctx.Artifacts, 2)
+}
+
 func TestRunPipeDistRemoved(t *testing.T) {
 	var assert = assert.New(t)
 	var ctx = &context.Context{
-		Archives: map[string]string{
-			"darwinamd64":  "mybin",
-			"windowsamd64": "mybin",
-		},
 		Config: config.Project{
 			Dist: "/path/nope",
 			Archive: config.Archive{
@@ -79,34 +98,13 @@ func TestRunPipeDistRemoved(t *testing.T) {
 			},
 		},
 	}
+	ctx.AddBinary("windowsamd64", "nope", "no", "blah")
 	assert.Error(Pipe{}.Run(ctx))
-}
-
-func TestFormatFor(t *testing.T) {
-	var assert = assert.New(t)
-	var ctx = &context.Context{
-		Config: config.Project{
-			Archive: config.Archive{
-				Format: "tar.gz",
-				FormatOverrides: []config.FormatOverride{
-					{
-						Goos:   "windows",
-						Format: "zip",
-					},
-				},
-			},
-		},
-	}
-	assert.Equal("zip", formatFor(ctx, "windowsamd64"))
-	assert.Equal("tar.gz", formatFor(ctx, "linux386"))
 }
 
 func TestRunPipeInvalidGlob(t *testing.T) {
 	var assert = assert.New(t)
 	var ctx = &context.Context{
-		Archives: map[string]string{
-			"windowsamd64": "mybin",
-		},
 		Config: config.Project{
 			Dist: "/tmp",
 			Archive: config.Archive{
@@ -116,25 +114,17 @@ func TestRunPipeInvalidGlob(t *testing.T) {
 			},
 		},
 	}
+	ctx.AddBinary("windowsamd64", "whatever", "foo", "bar")
 	assert.Error(Pipe{}.Run(ctx))
 }
 
 func TestRunPipeGlobFailsToAdd(t *testing.T) {
 	var assert = assert.New(t)
-	folder, err := ioutil.TempDir("", "archivetest")
-	assert.NoError(err)
-	current, err := os.Getwd()
-	assert.NoError(err)
-	assert.NoError(os.Chdir(folder))
-	defer func() {
-		assert.NoError(os.Chdir(current))
-	}()
+	folder, back := testlib.Mktmp(t)
+	defer back()
 	assert.NoError(os.MkdirAll(filepath.Join(folder, "folder", "another"), 0755))
 
 	var ctx = &context.Context{
-		Archives: map[string]string{
-			"windows386": "mybin",
-		},
 		Config: config.Project{
 			Dist: folder,
 			Archive: config.Archive{
@@ -144,20 +134,6 @@ func TestRunPipeGlobFailsToAdd(t *testing.T) {
 			},
 		},
 	}
-	assert.Error(Pipe{}.Run(ctx))
-}
-
-func TestRunPipeBinaryDontExist(t *testing.T) {
-	var assert = assert.New(t)
-	folder, err := ioutil.TempDir("", "archivetest")
-	assert.NoError(err)
-	var ctx = &context.Context{
-		Archives: map[string]string{
-			"windows386": "mybin",
-		},
-		Config: config.Project{
-			Dist: folder,
-		},
-	}
+	ctx.AddBinary("windows386", "mybin", "mybin", "dist/mybin")
 	assert.Error(Pipe{}.Run(ctx))
 }

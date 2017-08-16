@@ -5,46 +5,14 @@ package git
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
-	"text/template"
-
+	"github.com/apex/log"
 	"github.com/rai-project/goreleaser/context"
 )
-
-// ErrInvalidVersionFormat is return when the version isnt in a valid format
-type ErrInvalidVersionFormat struct {
-	version string
-}
-
-func (e ErrInvalidVersionFormat) Error() string {
-	return fmt.Sprintf("%v is not in a valid version format", e.version)
-}
-
-// ErrDirty happens when the repo has uncommitted/unstashed changes
-type ErrDirty struct {
-	status string
-}
-
-func (e ErrDirty) Error() string {
-	return fmt.Sprintf("git is currently in a dirty state:\n%v", e.status)
-}
-
-// ErrWrongRef happens when the HEAD reference is different from the tag being built
-type ErrWrongRef struct {
-	commit, tag string
-}
-
-func (e ErrWrongRef) Error() string {
-	return fmt.Sprintf("git tag %v was not made against commit %v", e.tag, e.commit)
-}
-
-// ErrNoTag happens if the underlying git repository doesn't contain any tags
-// but no snapshot-release was requested.
-var ErrNoTag = fmt.Errorf("git doesn't contain any tags. Either add a tag or use --snapshot")
 
 // Pipe for brew deployment
 type Pipe struct{}
@@ -74,7 +42,7 @@ func (Pipe) Run(ctx *context.Context) (err error) {
 		return
 	}
 	if !ctx.Validate {
-		log.Println("Skipped validations because --skip-validate is set")
+		log.Warn("skipped validations because --skip-validate is set")
 		return nil
 	}
 	return validate(ctx, commit, tag)
@@ -133,7 +101,7 @@ func getSnapshotName(ctx *context.Context, tag, commit string) (string, error) {
 }
 
 func validate(ctx *context.Context, commit, tag string) error {
-	out, err := git("status", "-s")
+	out, err := git("status", "--porcelain")
 	if strings.TrimSpace(out) != "" || err != nil {
 		return ErrDirty{out}
 	}
@@ -170,7 +138,7 @@ func gitLog(refs ...string) (string, error) {
 func getInfo() (tag, commit string, err error) {
 	tag, err = cleanGit("describe", "--tags", "--abbrev=0")
 	if err != nil {
-		log.Printf("Failed to retrieve current tag: %s", err.Error())
+		log.WithError(err).Info("failed to retrieve current tag")
 	}
 	commit, err = cleanGit("show", "--format='%H'", "HEAD")
 	return

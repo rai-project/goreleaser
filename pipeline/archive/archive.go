@@ -4,15 +4,13 @@
 package archive
 
 import (
-	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"github.com/apex/log"
+	"github.com/goreleaser/archive"
 	"github.com/rai-project/goreleaser/context"
-	"github.com/rai-project/goreleaser/internal/ext"
-	"github.com/rai-project/goreleaser/internal/tar"
-	"github.com/rai-project/goreleaser/internal/zip"
+	"github.com/rai-project/goreleaser/internal/archiveformat"
 	"github.com/mattn/go-zglob"
 	"golang.org/x/sync/errgroup"
 )
@@ -28,48 +26,57 @@ func (Pipe) Description() string {
 // Run the pipe
 func (Pipe) Run(ctx *context.Context) error {
 	var g errgroup.Group
-	for platform, archive := range ctx.Archives {
-		archive := archive
+	for platform, binaries := range ctx.Binaries {
 		platform := platform
+		binaries := binaries
 		g.Go(func() error {
-			return create(ctx, platform, archive)
+			if ctx.Config.Archive.Format == "binary" {
+				return skip(ctx, platform, binaries)
+			}
+			return create(ctx, platform, binaries)
 		})
 	}
 	return g.Wait()
 }
 
-// Archive represents a compression archive files from disk can be written to.
-type Archive interface {
-	Close() error
-	Add(name, path string) error
-}
-
-func create(ctx *context.Context, platform, name string) error {
-	var folder = filepath.Join(ctx.Config.Dist, name)
-	var format = formatFor(ctx, platform)
-	file, err := os.Create(folder + "." + format)
-	if err != nil {
-		return err
-	}
-	log.Println("Creating", file.Name())
-	defer func() { _ = file.Close() }()
-	var archive = archiveFor(file, format)
-	defer func() { _ = archive.Close() }()
-
-	files, err := findFiles(ctx)
-	if err != nil {
-		return err
-	}
-	for _, f := range files {
-		if err = archive.Add(f, f); err != nil {
+func create(ctx *context.Context, platform string, groups map[string][]context.Binary) error {
+	for folder, binaries := range groups {
+		var format = archiveformat.For(ctx, platform)
+		file, err := os.Create(filepath.Join(ctx.Config.Dist, folder+"."+format))
+		if err != nil {
 			return err
 		}
+		defer func() { _ = file.Close() }()
+		log.WithField("archive", file.Name()).Info("creating")
+		var archive = archive.New(file)
+		defer func() { _ = archive.Close() }()
+
+		files, err := findFiles(ctx)
+		if err != nil {
+			return err
+		}
+		for _, f := range files {
+			if err = archive.Add(f, f); err != nil {
+				return err
+			}
+		}
+		for _, binary := range binaries {
+			if err := archive.Add(binary.Name, binary.Path); err != nil {
+				return err
+			}
+		}
+		ctx.AddArtifact(file.Name())
 	}
-	var binary = ctx.Config.Build.Binary + ext.For(platform)
-	if err := archive.Add(binary, filepath.Join(folder, binary)); err != nil {
-		return err
+	return nil
+}
+
+func skip(ctx *context.Context, platform string, groups map[string][]context.Binary) error {
+	for _, binaries := range groups {
+		for _, binary := range binaries {
+			log.WithField("binary", binary.Name).Info("skip archiving")
+			ctx.AddArtifact(binary.Path)
+		}
 	}
-	ctx.AddArtifact(file.Name())
 	return nil
 }
 
@@ -82,20 +89,4 @@ func findFiles(ctx *context.Context) (result []string, err error) {
 		result = append(result, files...)
 	}
 	return
-}
-
-func archiveFor(file *os.File, format string) Archive {
-	if format == "zip" {
-		return zip.New(file)
-	}
-	return tar.New(file)
-}
-
-func formatFor(ctx *context.Context, platform string) string {
-	for _, override := range ctx.Config.Archive.FormatOverrides {
-		if strings.HasPrefix(platform, override.Goos) {
-			return override.Format
-		}
-	}
-	return ctx.Config.Archive.Format
 }

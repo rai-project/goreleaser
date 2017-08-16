@@ -23,6 +23,21 @@ func TestRunPipeNoFormats(t *testing.T) {
 	assert.NoError(Pipe{}.Run(ctx))
 }
 
+func TestRunPipeFormatBinary(t *testing.T) {
+	var assert = assert.New(t)
+	var ctx = &context.Context{
+		Config: config.Project{
+			FPM: config.FPM{
+				Formats: []string{"deb"},
+			},
+			Archive: config.Archive{
+				Format: "binary",
+			},
+		},
+	}
+	assert.NoError(Pipe{}.Run(ctx))
+}
+
 func TestRunPipe(t *testing.T) {
 	var assert = assert.New(t)
 	folder, err := ioutil.TempDir("", "archivetest")
@@ -30,21 +45,13 @@ func TestRunPipe(t *testing.T) {
 	var dist = filepath.Join(folder, "dist")
 	assert.NoError(os.Mkdir(dist, 0755))
 	assert.NoError(os.Mkdir(filepath.Join(dist, "mybin"), 0755))
-	_, err = os.Create(filepath.Join(dist, "mybin", "mybin"))
+	var binPath = filepath.Join(dist, "mybin", "mybin")
+	_, err = os.Create(binPath)
 	assert.NoError(err)
 	var ctx = &context.Context{
-		Archives: map[string]string{
-			"linuxamd64": "mybin",
-		},
 		Config: config.Project{
-			Dist: dist,
-			Build: config.Build{
-				Goarch: []string{
-					"amd64",
-					"i386",
-				},
-				Binary: "mybin",
-			},
+			ProjectName: "mybin",
+			Dist:        dist,
 			FPM: config.FPM{
 				Formats:      []string{"deb"},
 				Dependencies: []string{"make"},
@@ -56,6 +63,9 @@ func TestRunPipe(t *testing.T) {
 				Homepage:     "https://goreleaser.github.io",
 			},
 		},
+	}
+	for _, plat := range []string{"linuxamd64", "linux386", "darwinamd64"} {
+		ctx.AddBinary(plat, "mybin", "mybin", binPath)
 	}
 	assert.NoError(Pipe{}.Run(ctx))
 }
@@ -85,22 +95,28 @@ func TestCreateFileDoesntExist(t *testing.T) {
 	assert.NoError(os.Mkdir(dist, 0755))
 	assert.NoError(os.Mkdir(filepath.Join(dist, "mybin"), 0755))
 	var ctx = &context.Context{
-		Archives: map[string]string{
-			"linuxamd64": "mybin",
-		},
 		Config: config.Project{
 			Dist: dist,
-			Build: config.Build{
-				Goarch: []string{
-					"amd64",
-					"i386",
+			FPM: config.FPM{
+				Formats: []string{"deb"},
+				Files: map[string]string{
+					"testdata/testfile.txt": "/var/lib/test/testfile.txt",
 				},
-				Binary: "mybin",
 			},
+		},
+	}
+	ctx.AddBinary("linuxamd64", "mybin", "mybin", filepath.Join(dist, "mybin", "mybin"))
+	assert.Error(Pipe{}.Run(ctx))
+}
+
+func TestRunPipeWithExtraFiles(t *testing.T) {
+	var assert = assert.New(t)
+	var ctx = &context.Context{
+		Config: config.Project{
 			FPM: config.FPM{
 				Formats: []string{"deb"},
 			},
 		},
 	}
-	assert.Error(Pipe{}.Run(ctx))
+	assert.NoError(Pipe{}.Run(ctx))
 }

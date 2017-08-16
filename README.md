@@ -3,13 +3,12 @@
   <h3 align="center">GoReleaser</h3>
   <p align="center">Deliver Go binaries as fast and easily as possible.</p>
   <p align="center">
-    <a href="https://github.com/rai-project/goreleaser/releases/latest"><img alt="Release" src="https://img.shields.io/github/release/goreleaser/goreleaser.svg?style=flat-square"></a>
+    <a href="https://github.com/rai-project/goreleaser/releases/latest"><img alt="Release" src="https://img.shields.io/github/release/rai-project/goreleaser.svg?style=flat-square"></a>
     <a href="/LICENSE.md"><img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square"></a>
-    <a href="https://travis-ci.org/goreleaser/goreleaser"><img alt="Travis" src="https://img.shields.io/travis/goreleaser/goreleaser.svg?style=flat-square"></a>
-    <a href="https://codecov.io/gh/goreleaser/goreleaser"><img alt="Codecov branch" src="https://img.shields.io/codecov/c/github/goreleaser/goreleaser/master.svg?style=flat-square"></a>
+    <a href="https://travis-ci.org/rai-project/goreleaser"><img alt="Travis" src="https://img.shields.io/travis/rai-project/goreleaser.svg?style=flat-square"></a>
+    <a href="https://codecov.io/gh/rai-project/goreleaser"><img alt="Codecov branch" src="https://img.shields.io/codecov/c/github/rai-project/goreleaser/master.svg?style=flat-square"></a>
     <a href="https://goreportcard.com/report/github.com/rai-project/goreleaser"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/rai-project/goreleaser?style=flat-square"></a>
     <a href="http://godoc.org/github.com/rai-project/goreleaser"><img alt="Go Doc" src="https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square"></a>
-    <a href="https://beerpay.io/goreleaser/goreleaser"><img src="https://beerpay.io/goreleaser/goreleaser/badge.svg?style=flat-square" /></a>
     <a href="https://saythanks.io/to/caarlos0"><img alt="SayThanks.io" src="https://img.shields.io/badge/SayThanks.io-%E2%98%BC-1EAEDB.svg?style=flat-square"></a>
     <a href="https://github.com/goreleaser"><img alt="Powered By: GoReleaser" src="https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=flat-square"></a>
   </p>
@@ -39,7 +38,7 @@ For questions join the [#goreleaser](https://gophers.slack.com/messages/goreleas
 GoReleaser is a release automation tool for Golang projects, the goal is to simplify the build, release and publish steps while providing variant customization options for all steps.
 
 GoReleaser is built for CI tools; you only need to [download and execute it](#integration-with-ci) in your build script.
-You can [customize](#release-customization) your release process by createing a `goreleaser.yml` file.
+You can [customize](#release-customization) your release process by createing a `.goreleaser.yml` file.
 We are also working on integrating with package managers, we currently support Homebrew.
 
 The idea started with a [simple shell script](https://github.com/goreleaser/old-go-releaser), but it quickly became more complex and I also wanted to publish binaries via Homebrew.
@@ -57,41 +56,41 @@ func main() {
 }
 ```
 
-By default GoReleaser will build the your current directory, but you can change the build package path in the GoReleaser configuration file.
+By default GoReleaser will build the current directory, but you can change the build package path in the GoReleaser configuration file.
 
 ```yml
-# goreleaser.yml
+# .goreleaser.yml
 # Build customization
-build:
-  binary: drum-roll
-  goos:
-    - windows
-    - darwin
-    - linux
-  goarch:
-    - amd64
+builds:
+  - binary: drum-roll
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
 ```
 
 PS: Invalid GOOS/GOARCH combinations will automatically be skipped.
 
 This configuration specifies the build operating systems to Windows, Linux and MacOS using 64bit architecture, the name of the binaries is `drum-roll`.
 
-GoReleaser will then archive the result binaries of each Os/Arch into a separate file. The default format is `{{.Binary}}_{{.Os}}_{{.Arch}}`.
+GoReleaser will then archive the result binaries of each Os/Arch into a separate file. The default format is `{{.ProjectName}}_{{.Os}}_{{.Arch}}`.
 You can change the archives name and format. You can also replace the OS and the Architecture with your own.
 Another useful feature is to add files to archives, this is very useful for integrating assets like resource files.
 
 ```yml
-# goreleaser.yml
+# .goreleaser.yml
 # Build customization
-build:
-  main: main.go
-  binary: drum-roll
-  goos:
-    - windows
-    - darwin
-    - linux
-  goarch:
-    - amd64
+builds:
+  - main: main.go
+    binary: drum-roll
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
 # Archive customization
 archive:
   format: tar.gz
@@ -167,102 +166,115 @@ func main() {
 
 ## GoReleaser customization
 
-GoReleaser provides multiple customizations via the `goreleaser.yml` file.
+GoReleaser provides multiple customizations via the `.goreleaser.yml` file.
 You can generate it by running `goreleaser init` or start from scratch. The
 defaults are sensible and fit for most projects.
 
 We'll cover all customizations available bellow:
 
+### Project name
+
+```yml
+# .goreleaser.yml
+# The name of the project. It is used in the name of the brew formula, archives,
+# etc. Defaults to the name of the git project.
+project_name: myproject
+```
+
 ### Build customization
 
 ```yml
-# goreleaser.yml
-build:
-  # Path to main.go file or main package.
-  # Default is `.`
-  main: ./cmd/main.go
+# .goreleaser.yml
+builds:
+  # You can have multiple builds, its a common yaml list
+  -
+    # Path to main.go file or main package.
+    # Default is `.`
+    main: ./cmd/main.go
 
-  # Name of the binary.
-  # Default is the name of the project directory.
-  binary: program
+    # Name of the binary.
+    # Default is the name of the project directory.
+    binary: program
 
-  # Custom build tags.
-  # Default is empty
-  flags: -tags dev
+    # Custom build tags.
+    # Default is empty
+    flags: -tags dev
 
-  # Custom ldflags template.
-  # This is parsed with Golang template engine and the following variables
-  # are available:
-  # - Date
-  # - Commit
-  # - Tag
-  # - Version (Tag with the `v` prefix stripped)
-  # The default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}`
-  # Date format is `2006-01-02_15:04:05`
-  ldflags: -s -w -X main.build={{.Version}}
+    # Custom ldflags template.
+    # This is parsed with Golang template engine and the following variables
+    # are available:
+    # - Date
+    # - Commit
+    # - Tag
+    # - Version (Tag with the `v` prefix stripped)
+    # The default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}`
+    # Date format is `2006-01-02_15:04:05`
+    ldflags: -s -w -X main.build={{.Version}}
 
-  # Custom environment variables to be set durign the builds.
-  # Default is empty
-  env:
-   - CGO_ENABLED=0
+    # Custom environment variables to be set durign the builds.
+    # Default is empty
+    env:
+    - CGO_ENABLED=0
 
-  # GOOS list to build in.
-  # For more info refer to https://golang.org/doc/install/source#environment
-  # Defaults are darwin and linux
-  goos:
-    - freebsd
-    - windows
+    # GOOS list to build in.
+    # For more info refer to https://golang.org/doc/install/source#environment
+    # Defaults are darwin and linux
+    goos:
+      - freebsd
+      - windows
 
-  # GOARCH to build in.
-  # For more info refer to https://golang.org/doc/install/source#environment
-  # Defaults are 386 and amd64
-  goarch:
-    - amd64
-    - arm
-    - arm64
+    # GOARCH to build in.
+    # For more info refer to https://golang.org/doc/install/source#environment
+    # Defaults are 386 and amd64
+    goarch:
+      - amd64
+      - arm
+      - arm64
 
-  # GOARM to build in when GOARCH is arm.
-  # For more info refer to https://golang.org/doc/install/source#environment
-  # Defaults are 6
-  goarm:
-    - 6
-    - 7
+    # GOARM to build in when GOARCH is arm.
+    # For more info refer to https://golang.org/doc/install/source#environment
+    # Defaults are 6
+    goarm:
+      - 6
+      - 7
 
-  # List of combinations of GOOS + GOARCH + GOARM to ignore.
-  # Default is empty.
-  ignore:
-    - goos: darwin
-      goarch: 386
-    - goos: linux
-      goarch: arm
-      goarm: 7
+    # List of combinations of GOOS + GOARCH + GOARM to ignore.
+    # Default is empty.
+    ignore:
+      - goos: darwin
+        goarch: 386
+      - goos: linux
+        goarch: arm
+        goarm: 7
 
-  # Hooks can be used to customize the final binary, for example, to run
-  # generator or whatever you want.
-  # Default is both hooks empty.
-  hooks:
-    pre: rice embed-go
-    post: ./script.sh
+    # Hooks can be used to customize the final binary, for example, to run
+    # generator or whatever you want.
+    # Default is both hooks empty.
+    hooks:
+      pre: rice embed-go
+      post: ./script.sh
 ```
 
 ### Archive customization
 
 ```yml
-# goreleaser.yml
+# .goreleaser.yml
 archive:
   # You can change the name of the archive.
   # This is parsed with Golang template engine and the following variables
   # are available:
-  # - Binary
+  # - ProjectName
   # - Tag
   # - Version (Tag with the `v` prefix stripped)
   # - Os
   # - Arch
   # - Arm (ARM version)
-  # The default is `{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}`
-  name_template: "{{.Binary}}_{{.Version}}_{{.Os}}_{{.Arch}}"
+  # The default is `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}`
+  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
-  # Archive format. Valid options are `tar.gz` and `zip`.
+  # Archive format. Valid options are `tar.gz`, `zip` and `binary`.
+  # If format is `binary` no archives are created and the binaries are instead uploaded directly.
+  # In that case name_template the below specified files are ignored.
   # Default is `tar.gz`
   format: zip
 
@@ -296,7 +308,7 @@ archive:
 ### Release customization
 
 ```yml
-# goreleaser.yml
+# .goreleaser.yml
 release:
   # Repo in which the release will be created.
   # Default is extracted from the origin remote URL.
@@ -315,7 +327,7 @@ You can also specify a release notes file in markdown format using the
 ### Snapshot customization
 
 ```yml
-# goreleaser.yml
+# .goreleaser.yml
 snapshot:
   # Allows you to change the name of the generated snapshot
   # releases. The following variables are available:
@@ -332,7 +344,7 @@ The brew section specifies how the formula should be created.
 Check [the Homebrew documentation](https://github.com/Homebrew/brew/blob/master/docs/How-to-Create-and-Maintain-a-Tap.md) and the [formula cookbook](https://github.com/Homebrew/brew/blob/master/docs/Formula-Cookbook.md) for details.
 
 ```yml
-# goreleaser.yml
+# .goreleaser.yml
 brew:
   # Reporitory to push the tap to.
   github:
@@ -365,13 +377,18 @@ brew:
     - svn
     - bash
 
-  # Packages that run as a service
-  plist:|
+  # Packages that run as a service. Default is empty.
+  plist: |
     <?xml version="1.0" encoding="UTF-8"?>
     ...
 
-  # Custom install script for brew. Default: "bin.install "program"
-  install:|
+  # So you can brew test your formula. Default is empty.
+  test: |
+    system "#{bin}/program --version"
+    ...
+
+  # Custom install script for brew. Default is 'bin.install "program"'
+  install: |
     bin.install "program"
     ...
 ```
@@ -404,7 +421,7 @@ GoReleaser can be wired to [fpm]() to generate `.deb`, `.rpm` and other archives
 [fpm]: https://github.com/jordansissel/fpm
 
 ```yml
-# goreleaser.yml
+# .goreleaser.yml
 fpm:
   # Your app's vendor
   # Default is empty
@@ -439,9 +456,76 @@ fpm:
   conflicts:
     - svn
     - bash
+
+  # Files or directories to add to your package (beyond the binary)
+  files:
+    "scripts/etc/init.d/": "/etc/init.d"
+
 ```
 
 Note that GoReleaser will not install `fpm` nor any of its dependencies for you.
+
+### Snapcraft build customization
+
+GoReleaser can generate `snap` packages. [Snaps](http://snapcraft.io/) are a new packaging format that will let you publish your project directly to the Ubuntu store. From there it will be installable in all the [supported Linux distros](https://snapcraft.io/docs/core/install), with automatic and transactional updates.
+
+You can read more about it in the [snapcraft docs](https://snapcraft.io/docs/).
+
+```yml
+# .goreleaser.yml
+snapcraft:
+
+  # The name of the snap. This is optional and defaults to the project name.
+  name: drumroll
+
+  # Single-line elevator pitch for your amazing snap.
+  # 79 char long at most.
+  summary: Software to create fast and easy drum rolls.
+
+  # This the description of your snap. You have a paragraph or two to tell the
+  # most important story about your snap. Keep it under 100 words though,
+  # we live in tweetspace and your description wants to look good in the snap
+  # store.
+  description: |
+    This is the best drum roll application out there.
+    Install it and awe!
+
+  # A guardrail to prevent you from releasing a snap to all your users before
+  # it is ready.
+  # `devel` will let you release only to the `edge` and `beta` channels in the
+  # store. `stable` will let you release also to the `candidate` and `stable`
+  # channels. More info about channels here:
+  # https://snapcraft.io/docs/reference/channels.
+  grade: stable
+
+  # Snaps can be setup to follow three different confinement policies:
+  # `strict`, `devmode` and `classic`. A strict confinement where the snap
+  # can only read and write in its own namespace is recommended. Extra
+  # permissions for strict snaps can be declared as `plugs` for the app, which
+  # are explained later. More info about confinement here:
+  # https://snapcraft.io/docs/reference/confinement).
+  confinement: strict
+
+  # Each binary built by GoReleaser is an app inside the snap. In this section
+  # you can declare extra details for those binaries. It is optional.
+  apps:
+
+    # The name of the app must be the same name of the binary built.
+    drumroll:
+
+      # If your app requires extra permissions to work outside of its default
+      # confined space, delcare them here.
+      # You can read the documentation about the available plugs and the
+      # things they allow:
+      # https://snapcraft.io/docs/reference/interfaces).
+      plugs: ["home", "network"]
+
+      # If you want your app to be autostarted and to always run in the
+      # background, you can make it a simple daemon.
+      daemon: simple
+```
+
+Note that GoReleaser will not install `snapcraft` nor any of its dependencies for you.
 
 ### Custom release notes
 
@@ -471,6 +555,11 @@ deployment:
 ```
 
 *Note that if you test multiple versions or multiple OSes you probably want to make sure GoReleaser is just run once*
+
+### Stargazers over time
+
+[![rai-project/goreleaser stargazers over time](https://starcharts.herokuapp.com/rai-project/goreleaser.svg)](https://starcharts.herokuapp.com/rai-project/goreleaser)
+
 
 ---
 

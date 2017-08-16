@@ -25,45 +25,41 @@ func TestRunPipe(t *testing.T) {
 	assert.NoError(err)
 	debfile, err := os.Create(filepath.Join(folder, "bin.deb"))
 	assert.NoError(err)
-	var ctx = &context.Context{
-		Git: context.GitInfo{
-			CurrentTag: "v1.0.0",
-		},
-		Config: config.Project{
-			Dist: folder,
-			Release: config.Release{
-				GitHub: config.Repo{
-					Owner: "test",
-					Name:  "test",
-				},
+	var config = config.Project{
+		Dist: folder,
+		Release: config.Release{
+			GitHub: config.Repo{
+				Owner: "test",
+				Name:  "test",
 			},
 		},
-		Publish: true,
 	}
+	var ctx = context.New(config)
+	ctx.Git = context.GitInfo{CurrentTag: "v1.0.0"}
+	ctx.Publish = true
 	ctx.AddArtifact(tarfile.Name())
 	ctx.AddArtifact(debfile.Name())
 	client := &DummyClient{}
 	assert.NoError(doRun(ctx, client))
 	assert.True(client.CreatedRelease)
 	assert.True(client.UploadedFile)
+	assert.Contains(client.UploadedFileNames, "bin.deb")
+	assert.Contains(client.UploadedFileNames, "bin.tar.gz")
 }
 
 func TestRunPipeReleaseCreationFailed(t *testing.T) {
 	var assert = assert.New(t)
-	var ctx = &context.Context{
-		Git: context.GitInfo{
-			CurrentTag: "v1.0.0",
-		},
-		Config: config.Project{
-			Release: config.Release{
-				GitHub: config.Repo{
-					Owner: "test",
-					Name:  "test",
-				},
+	var config = config.Project{
+		Release: config.Release{
+			GitHub: config.Repo{
+				Owner: "test",
+				Name:  "test",
 			},
 		},
-		Publish: true,
 	}
+	var ctx = context.New(config)
+	ctx.Git = context.GitInfo{CurrentTag: "v1.0.0"}
+	ctx.Publish = true
 	client := &DummyClient{
 		FailToCreateRelease: true,
 	}
@@ -74,20 +70,17 @@ func TestRunPipeReleaseCreationFailed(t *testing.T) {
 
 func TestRunPipeWithFileThatDontExist(t *testing.T) {
 	var assert = assert.New(t)
-	var ctx = &context.Context{
-		Git: context.GitInfo{
-			CurrentTag: "v1.0.0",
-		},
-		Config: config.Project{
-			Release: config.Release{
-				GitHub: config.Repo{
-					Owner: "test",
-					Name:  "test",
-				},
+	var config = config.Project{
+		Release: config.Release{
+			GitHub: config.Repo{
+				Owner: "test",
+				Name:  "test",
 			},
 		},
-		Publish: true,
 	}
+	var ctx = context.New(config)
+	ctx.Git = context.GitInfo{CurrentTag: "v1.0.0"}
+	ctx.Publish = true
 	ctx.AddArtifact("this-file-wont-exist-hopefully")
 	client := &DummyClient{}
 	assert.Error(doRun(ctx, client))
@@ -101,21 +94,17 @@ func TestRunPipeUploadFailure(t *testing.T) {
 	assert.NoError(err)
 	tarfile, err := os.Create(filepath.Join(folder, "bin.tar.gz"))
 	assert.NoError(err)
-	var ctx = &context.Context{
-		Git: context.GitInfo{
-			CurrentTag: "v1.0.0",
-		},
-		Config: config.Project{
-			Dist: folder,
-			Release: config.Release{
-				GitHub: config.Repo{
-					Owner: "test",
-					Name:  "test",
-				},
+	var config = config.Project{
+		Release: config.Release{
+			GitHub: config.Repo{
+				Owner: "test",
+				Name:  "test",
 			},
 		},
-		Publish: true,
 	}
+	var ctx = context.New(config)
+	ctx.Git = context.GitInfo{CurrentTag: "v1.0.0"}
+	ctx.Publish = true
 	ctx.AddArtifact(tarfile.Name())
 	client := &DummyClient{
 		FailToUpload: true,
@@ -128,7 +117,8 @@ func TestRunPipeUploadFailure(t *testing.T) {
 func TestSkipPublish(t *testing.T) {
 	var assert = assert.New(t)
 	var ctx = &context.Context{
-		Publish: false,
+		Publish:     false,
+		Parallelism: 1,
 	}
 	client := &DummyClient{}
 	assert.NoError(doRun(ctx, client))
@@ -141,6 +131,7 @@ type DummyClient struct {
 	FailToUpload        bool
 	CreatedRelease      bool
 	UploadedFile        bool
+	UploadedFileNames   []string
 }
 
 func (client *DummyClient) CreateRelease(ctx *context.Context, body string) (releaseID int, err error) {
@@ -160,5 +151,6 @@ func (client *DummyClient) Upload(ctx *context.Context, releaseID int, name stri
 		return errors.New("upload failed")
 	}
 	client.UploadedFile = true
+	client.UploadedFileNames = append(client.UploadedFileNames, name)
 	return
 }
